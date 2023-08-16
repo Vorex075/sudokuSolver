@@ -9,7 +9,9 @@ Clone this repo using
 ### Usage
 Go to the directory with the makefile and type
 > make
+
 Then run the program using
+
 > ./sudoku
 
 The imput file is __sudokuInput.txt__ which contains the sudoku itself. To change the sudoku modify the file:
