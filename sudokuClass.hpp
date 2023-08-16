@@ -1,5 +1,18 @@
 #include <string>
 #include <iostream>
+#include <vector>
+
+
+
+struct threesome
+{
+    int row;
+    int column;
+    int* value;
+
+};
+
+
 
 class Sudoku {
     public:
@@ -11,7 +24,9 @@ class Sudoku {
         */
         const int& get_empty_spaces() const;
 
-        void print_sudoku() const;
+        void print() const;
+
+        bool solve();
 
 
 
@@ -40,7 +55,18 @@ class Sudoku {
         */
         bool is_valid_sudoku() const;
 
+        /**
+         * @brief Check if the change is a valid change.
+         * @param change An struct with a reference to a position, a row value and a column value.
+         * This struct is called "threesome"
+         * @return True if it is valid. False otherwise.
+        */
+
+        bool is_valid_change(threesome& change);
         
+        void fill_ordered_list();
         int** sudoku_;
         int numbers_left_;
+
+        threesome* zero_array_;
 };

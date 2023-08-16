@@ -12,6 +12,7 @@ Sudoku::Sudoku() {
     }
 
     fill_sudoku();
+
     
     if (is_valid_sudoku()) {
         std::cout << "It is a valid initial sudoku\n";
@@ -21,7 +22,10 @@ Sudoku::Sudoku() {
         std::cout << "Check the input and try again.\n Execution stopped.\n";
         std::exit(EXIT_FAILURE);
     }
-    
+
+    // This is for the solver
+    zero_array_ = new threesome[numbers_left_];
+    fill_ordered_list();
 }
 
 //-----------DESTRUCTOR------------------
@@ -74,7 +78,7 @@ const int& Sudoku::get_empty_spaces() const {
 }
 
 
-void Sudoku::print_sudoku() const {
+void Sudoku::print() const {
     std::cout << "\n";
     for (unsigned i{0}; i < 9; i++) {
         for (unsigned j{0}; j < 9; j++) {
@@ -230,7 +234,56 @@ bool Sudoku::is_valid_sudoku() const {
     }
     return true;
 }
+
+void Sudoku::fill_ordered_list() {
+    unsigned int position = 0;
+    for (unsigned int i{0}; i < 9; i++) {
+        for (unsigned int j{0}; j < 9; j++) {
+            if (sudoku_[i][j] == 0) {
+                zero_array_[position].value = &sudoku_[i][j];
+                zero_array_[position].row = i;
+                zero_array_[position].column = j;
+                position++;
+            }
+        }
+    }
+}
+
+bool Sudoku::is_valid_change(threesome& change) {
+    return (is_valid_line(0, change.row) && is_valid_line(1, change.column) && is_valid_subMatrix(change.row, change.column));
+}
+
+bool Sudoku::solve() {
+
+
+    for (int i = 0; i < numbers_left_; i++) {
+        if (*zero_array_[i].value == 0) { // We wont work over already modified positions
+        
+            for (int j = 1; j <= 9; j++) {
+                *zero_array_[i].value = j;
+                if (is_valid_change(zero_array_[i])) {
+                    if (this->solve()) {
+                        return true;
+                    }
+                }
+                *zero_array_[i].value = 0; // Its not a valid change, so we discard the change
+            }
+            return false; // This branch has no solution
+        }
+    }
+    for (int i = 0; i < numbers_left_; i++) {
+        std::cout << *zero_array_[i].value << " ";
+    }
+    std::cout << "\n";
+        numbers_left_ = 0;
+    return true; // There is no empty cell in the sodoku, so it is solved now
+}
+
 int main() {
     Sudoku sudoku;
-    sudoku.print_sudoku();
+    sudoku.print();
+
+    sudoku.solve();
+
+    sudoku.print();
 }
