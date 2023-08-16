@@ -23,27 +23,22 @@ Sudoku::Sudoku() {
         std::exit(EXIT_FAILURE);
     }
 
-    // This is for the solver
-    zero_array_ = new threesome[numbers_left_];
-    fill_ordered_list();
 }
 
 //-----------DESTRUCTOR------------------
 
 Sudoku::~Sudoku() {
     for (unsigned i{0}; i < 9; i++) {
-        delete sudoku_[i];
+        delete[] sudoku_[i];
     }
-    delete sudoku_;
+    delete[] sudoku_;
     sudoku_ = nullptr;
 }
 
+//-----------FILLERS---------------------
 
 void Sudoku::fill_sudoku() {
-    std::cout << "Type the name of the input file: ";
-    std::string input;
-    std::cin >> input;
-    std::ifstream input_file(input);
+    std::ifstream input_file("./sudokuInput.txt");
     if (!input_file) {
         std::cout << "There was an error while trying to open the input file\n";
         std::cout << "Make sure you typed the correct file name. It has to include";
@@ -73,10 +68,27 @@ void Sudoku::fill_sudoku() {
     return;
 }
 
+void Sudoku::fill_zero_array() {
+    unsigned int position = 0;
+    for (unsigned int i{0}; i < 9; i++) {
+        for (unsigned int j{0}; j < 9; j++) {
+            if (sudoku_[i][j] == 0) {
+                zero_array_[position].value = &sudoku_[i][j];
+                zero_array_[position].row = i;
+                zero_array_[position].column = j;
+                position++;
+            }
+        }
+    }
+}
+
+//-----------GETTER-------------------
+
 const int& Sudoku::get_empty_spaces() const {
     return numbers_left_;
 }
 
+//-----------PRINTER------------------
 
 void Sudoku::print() const {
     std::cout << "\n";
@@ -89,7 +101,7 @@ void Sudoku::print() const {
     std::cout << "There are " << get_empty_spaces() << " spaces left\n";
 }
 
-
+//-----------VALIDATORS---------------
 
 bool Sudoku::is_valid_line(bool column, int index) const {
     if (column) {
@@ -98,7 +110,7 @@ bool Sudoku::is_valid_line(bool column, int index) const {
                 continue;
             }
             for (unsigned j = i+1; j < 9; j++) {
-                if (sudoku_[i][index] == sudoku_[j][index]) { // There is at least 1 value repeated
+                if (sudoku_[i][index] == sudoku_[j][index]) { 
                     return false;
                 }
             }
@@ -109,7 +121,7 @@ bool Sudoku::is_valid_line(bool column, int index) const {
                 continue;
             }
             for (unsigned j = i+1; j < 9; j++) {
-                if (sudoku_[index][i] == sudoku_[index][j]) { // There is at least 1 value repeated
+                if (sudoku_[index][i] == sudoku_[index][j]) { 
                     return false;
                 }
             }
@@ -199,7 +211,7 @@ bool Sudoku::is_valid_subMatrix(int row, int column) const {
         }
     }
 
-    // Now we have the sub-matrix as an array. 
+    // Now we have the sub-matrix as an array, so it is easier to check repeated values.
 
     bool is_valid = true;
     for (unsigned i = 0; i < 8; i++) {
@@ -235,34 +247,34 @@ bool Sudoku::is_valid_sudoku() const {
     return true;
 }
 
-void Sudoku::fill_ordered_list() {
-    unsigned int position = 0;
-    for (unsigned int i{0}; i < 9; i++) {
-        for (unsigned int j{0}; j < 9; j++) {
-            if (sudoku_[i][j] == 0) {
-                zero_array_[position].value = &sudoku_[i][j];
-                zero_array_[position].row = i;
-                zero_array_[position].column = j;
-                position++;
-            }
-        }
-    }
-}
-
 bool Sudoku::is_valid_change(threesome& change) {
     return (is_valid_line(0, change.row) && is_valid_line(1, change.column) && is_valid_subMatrix(change.row, change.column));
 }
 
-bool Sudoku::solve() {
+//-----------SOLVER------------------
 
+void Sudoku::solve() {
+    if (numbers_left_ == 0) {
+        std::cout << "The sudoku is already solved\n";
+        return;
+    }
+    zero_array_ = new threesome[numbers_left_];
+    fill_zero_array();
 
+    backtracking();
+
+    delete[] zero_array_;
+   
+}
+
+bool Sudoku::backtracking() {
     for (int i = 0; i < numbers_left_; i++) {
         if (*zero_array_[i].value == 0) { // We wont work over already modified positions
         
             for (int j = 1; j <= 9; j++) {
                 *zero_array_[i].value = j;
                 if (is_valid_change(zero_array_[i])) {
-                    if (this->solve()) {
+                    if (this->backtracking()) {
                         return true;
                     }
                 }
@@ -271,19 +283,6 @@ bool Sudoku::solve() {
             return false; // This branch has no solution
         }
     }
-    for (int i = 0; i < numbers_left_; i++) {
-        std::cout << *zero_array_[i].value << " ";
-    }
-    std::cout << "\n";
-        numbers_left_ = 0;
+    numbers_left_ = 0;
     return true; // There is no empty cell in the sodoku, so it is solved now
-}
-
-int main() {
-    Sudoku sudoku;
-    sudoku.print();
-
-    sudoku.solve();
-
-    sudoku.print();
 }

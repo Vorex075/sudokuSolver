@@ -12,8 +12,6 @@ struct threesome
 
 };
 
-
-
 class Sudoku {
     public:
 
@@ -24,15 +22,19 @@ class Sudoku {
         */
         const int& get_empty_spaces() const;
 
+        /**
+         * @brief Print in console the sudoku with the number of empty cells left
+        */
         void print() const;
 
-        bool solve();
-
-
+        /**
+         * @brief Solves the sudoku
+        */
+        void solve();
 
     private:
         /**
-         * @brief Reads the input file to fill the sudoku info
+         * @brief Reads the input file to fill the sudoku with values 
         */
         void fill_sudoku();
         /**
@@ -61,10 +63,19 @@ class Sudoku {
          * This struct is called "threesome"
          * @return True if it is valid. False otherwise.
         */
-
         bool is_valid_change(threesome& change);
         
-        void fill_ordered_list();
+        /**
+         * @brief Solves the sudoku using backtracking
+        */
+        bool backtracking();
+
+        /**
+         * @brief Fills "zero_array_" with references to blank spaces in the
+         * original sudoku and its position int the matrix
+        */
+        void fill_zero_array();
+        
         int** sudoku_;
         int numbers_left_;
 
