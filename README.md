@@ -7,8 +7,7 @@ Clone this repo using
 > git clone git@github.com:Vorex075/sudokuSolver.git
 
 ### Usage
-Go to the directory with the makefile and type
-> make
+Go to the directory with the makefile and type __make__
 
 Then run the program using
 
