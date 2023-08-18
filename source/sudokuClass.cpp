@@ -3,15 +3,24 @@
 
 
 
+
+
 //-----------CONSTRUCTOR-----------------
 
+
 Sudoku::Sudoku() {
+
+}
+
+
+
+Sudoku::Sudoku(const std::string& input_name) {
     sudoku_ = new int*[9];
     for (unsigned i{0}; i < 9; i++) {
         sudoku_[i] = new int[9];
     }
 
-    fill_sudoku();
+    fill_sudoku(input_name);
 
     
     if (is_valid_sudoku()) {
@@ -23,6 +32,21 @@ Sudoku::Sudoku() {
         std::exit(EXIT_FAILURE);
     }
 
+}
+
+Sudoku::Sudoku(const Sudoku& another_sudoku) {
+    sudoku_ = new int*[9];
+    for (unsigned int i{0}; i < 9; i++) {
+        sudoku_[i] = new int[9];
+    }
+
+    for (unsigned int i{0}; i < 9; i++) {
+        for (unsigned int j{0}; j < 9; j++) {
+            sudoku_[i][j] = another_sudoku[i][j];
+        }
+    }
+
+    // Since we're copying an existing sudoku, we don't need to check if this sudoku is valid again
 }
 
 //-----------DESTRUCTOR------------------
@@ -37,8 +61,8 @@ Sudoku::~Sudoku() {
 
 //-----------FILLERS---------------------
 
-void Sudoku::fill_sudoku() {
-    std::ifstream input_file("./sudokuInput.txt");
+void Sudoku::fill_sudoku(const std::string& input) {
+    std::ifstream input_file(input);
     if (!input_file) {
         std::cout << "There was an error while trying to open the input file\n";
         std::cout << "Make sure you typed the correct file name. It has to include";
@@ -68,24 +92,20 @@ void Sudoku::fill_sudoku() {
     return;
 }
 
-void Sudoku::fill_zero_array() {
-    unsigned int position = 0;
-    for (unsigned int i{0}; i < 9; i++) {
-        for (unsigned int j{0}; j < 9; j++) {
-            if (sudoku_[i][j] == 0) {
-                zero_array_[position].value = &sudoku_[i][j];
-                zero_array_[position].row = i;
-                zero_array_[position].column = j;
-                position++;
-            }
-        }
-    }
-}
-
 //-----------GETTER-------------------
 
 const int& Sudoku::get_empty_spaces() const {
     return numbers_left_;
+}
+
+const int* Sudoku::operator[](int row) const{
+    return sudoku_[row];
+}
+
+
+
+int* Sudoku::operator[](int row) {
+    return sudoku_[row];
 }
 
 //-----------PRINTER------------------
@@ -247,7 +267,7 @@ bool Sudoku::is_valid_sudoku() const {
     return true;
 }
 
-bool Sudoku::is_valid_change(threesome& change) {
+bool Sudoku::is_valid_change(BlankSpace::threesome& change) {
     return (is_valid_line(0, change.row) && is_valid_line(1, change.column) && is_valid_subMatrix(change.row, change.column));
 }
 
@@ -258,31 +278,110 @@ void Sudoku::solve() {
         std::cout << "The sudoku is already solved\n";
         return;
     }
-    zero_array_ = new threesome[numbers_left_];
-    fill_zero_array();
+    
 
     backtracking();
-
-    delete[] zero_array_;
-   
 }
 
-bool Sudoku::backtracking() {
-    for (int i = 0; i < numbers_left_; i++) {
-        if (*zero_array_[i].value == 0) { // We wont work over already modified positions
-        
-            for (int j = 1; j <= 9; j++) {
-                *zero_array_[i].value = j;
-                if (is_valid_change(zero_array_[i])) {
-                    if (this->backtracking()) {
-                        return true;
-                    }
-                }
-                *zero_array_[i].value = 0; // Its not a valid change, so we discard the change
+int Sudoku::smallest_row(BlankSpace::threesome& blank_space) {
+    int min_blank = 10;
+    for (int i = 0; i < 9; i++) {
+        int total_row = 0;
+        for (int j = 0; j < 9; j++) {
+            if (sudoku_[i][j] == 0) {
+                total_row++;
             }
-            return false; // This branch has no solution
+        }
+        if (total_row < min_blank && total_row != 0) {
+            blank_space.row = i;
+            min_blank = total_row;
         }
     }
+
+    // Now need to look after the first blank space in the row
+
+    if (min_blank == 10) {
+        return false;
+    }
+    for (int i = 0; i < 9; i++) {
+        if (sudoku_[blank_space.row][i] == 0) {
+            blank_space.column = i;
+            blank_space.value = &sudoku_[blank_space.row][blank_space.column];
+            return min_blank;
+        }
+    }
+    return min_blank; // This should not be reached
+}
+int Sudoku::smallest_column(BlankSpace::threesome& blank_space) {
+    int min_blank = 10;
+    for (int j = 0; j < 9; j++) {
+        int total_col = 0;
+        for (int i = 0; i < 9; i++) {
+            if (sudoku_[i][j] == 0) {
+                total_col++;
+            }
+        }
+        if (total_col < min_blank && total_col != 0) {
+            blank_space.column = j;
+            min_blank = total_col;
+        }
+    }
+
+    // Now need to look after the first blank space in the column
+
+    if (min_blank == 10) {
+        return 0;
+    }
+    for (int i = 0; i < 9; i++) {
+        if (sudoku_[i][blank_space.column] == 0) {
+            blank_space.row = i;
+            blank_space.value = &sudoku_[blank_space.row][blank_space.column];
+            return true;
+        }
+    }
+    return min_blank; // This should not be reached
+}
+
+bool Sudoku::smallest_line_position(BlankSpace::threesome& BlankSpace) {
+
+    BlankSpace::threesome blank_space_row;
+    BlankSpace::threesome blank_space_col;
+
+    int row = smallest_row(blank_space_row);
+    int col = smallest_column(blank_space_col);
+
+    if (row < col && row != 0) {
+        BlankSpace = blank_space_row;
+        return true;
+
+    } else if (col < row && col != 0){
+        BlankSpace = blank_space_col;
+        return true;
+    } else if (col == row && col != 0) {
+        BlankSpace = blank_space_col;
+        return true;
+    } 
+    return false; // If everything fails, there is no blank space left in the sudoku
+}
+
+
+
+bool Sudoku::backtracking() {
+    BlankSpace::threesome blank_space;
+    blank_space.row = 0;
+    blank_space.column = 0;
+    while (smallest_line_position(blank_space)) {
+        for (int i = 1; i <= 9; i++) {
+            *blank_space.value = i;
+            if (is_valid_change(blank_space)) {
+                if (backtracking()) {
+                    return true;
+                }
+            }
+            *blank_space.value = 0; // Its not a valid change, so we discard the last one
+        }
+        return false; // This branch has no solution. None of the 9 values could solve it
+    }
     numbers_left_ = 0;
-    return true; // There is no empty cell in the sodoku, so it is solved now
+    return true; // There is no empty position in the sudoku, so it is solved
 }

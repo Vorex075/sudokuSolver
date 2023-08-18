@@ -1,21 +1,45 @@
+#ifndef SUDOKU_CLASS
+#define SUDOKU_CLASS
+
 #include <string>
 #include <iostream>
 #include <vector>
 
+namespace BlankSpace {
+    struct threesome {
+        int row;
+        int column;
+        int* value;
+        void operator=(BlankSpace::threesome another_threesome) {
+            this->row = another_threesome.row;
+            this->column = another_threesome.column;
+            this->value = another_threesome.value;
+        }
+    };
+}
 
-
-struct threesome
-{
-    int row;
-    int column;
-    int* value;
-
-};
 
 class Sudoku {
     public:
 
+        /**
+         * Default constructor 
+        */
         Sudoku();
+
+        /**
+         * Constructor with input
+        */
+        Sudoku(const std::string& input_file);
+
+        /**
+         * Copy constructor
+        */
+        Sudoku(const Sudoku& another_sudoku);
+
+        /**
+         * Destructor
+        */
         ~Sudoku();
         /**
          * @return The number of empty cells that are left in the sudoku
@@ -32,11 +56,17 @@ class Sudoku {
         */
         void solve();
 
+        const int* operator[](int row) const;
+
+        int* operator[](int row);
+
+        
+
     private:
         /**
          * @brief Reads the input file to fill the sudoku with values 
         */
-        void fill_sudoku();
+        void fill_sudoku(const std::string& input_name);
         /**
          * @brief Check if a line is valid to continue solving the sudoku
          * @param column True if it is a column. False if is a row
@@ -63,21 +93,33 @@ class Sudoku {
          * This struct is called "threesome"
          * @return True if it is valid. False otherwise.
         */
-        bool is_valid_change(threesome& change);
+        bool is_valid_change(BlankSpace::threesome& change);
+
+        /**
+         * @brief Looks over the sudoku matrix and finds the
+         * line with the lowest number of blank spaces.
+         * @attention With line we include rows and columns
+         * @param value A pointer to the first blank space of the smallest line
+         * @param position A pair with the coordinates of 'value' in the matrix
+         * @return False if there is no blank space left. True otherwise
+        */
+        bool smallest_line_position(BlankSpace::threesome& BlankSpace);
         
+        int smallest_row(BlankSpace::threesome& blank_Space);
+
+        int smallest_column(BlankSpace::threesome& blank_Space);
+
+
         /**
          * @brief Solves the sudoku using backtracking
         */
         bool backtracking();
-
-        /**
-         * @brief Fills "zero_array_" with references to blank spaces in the
-         * original sudoku and its position int the matrix
-        */
-        void fill_zero_array();
         
         int** sudoku_;
         int numbers_left_;
 
-        threesome* zero_array_;
+        
 };
+
+
+#endif
