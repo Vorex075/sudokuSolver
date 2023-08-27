@@ -6,7 +6,7 @@ Go to the directory with makefile and type __make__
 
 Then run the program using
 
-> ./sudoku
+> ./sudoku 
 
 The imput file is __sudokuInput.txt__ which contains the sudoku itself. To change the sudoku modify the file:
 - It is a 9x9 grid
